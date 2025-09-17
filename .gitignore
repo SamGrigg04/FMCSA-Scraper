@@ -7,7 +7,7 @@ __pycache__/
 build/
 dist/
 
-# Configs / credentials
+# Configs / credentials / secrets
 *.json
 config.json
 

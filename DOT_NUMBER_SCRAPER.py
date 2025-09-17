@@ -1,6 +1,6 @@
 """
 Author: Sam Grigg
-Last Updated: 09/11/2025
+Last Updated: 09/17/2025
 Purpose: Get data from FMCSA and put it in a Google Sheet
 
 Notes:

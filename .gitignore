@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# PyInstaller
+build/
+dist/
+
+# Configs / credentials
+*.json
+config.json
+
+# CSV outputs
+*.csv
+
+# VSCode / IDE stuff
+.vscode/

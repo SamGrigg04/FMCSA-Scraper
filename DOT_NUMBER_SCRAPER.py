@@ -1,6 +1,6 @@
 """
 Author: Sam Grigg
-Last Updated: 09/17/2025
+Last Updated: 10/02/2025
 Purpose: Get data from FMCSA and put it in a Google Sheet
 
 Notes:
@@ -9,8 +9,8 @@ Notes:
         Make sure the helper account has editing permission
 
     If you're using the code and you're not me:
-        Update APP_TOKEN (line 102)
-        Update SERVICE_ACCOUNT_FILE (line 275)
+        Update APP_TOKEN (line 122)
+        Update SERVICE_ACCOUNT_FILE (line 352)
         Get a different helper account
     To filter with different parameters, add them in params (line 64)
     To include more data on the spreadsheet, update data_needed (line 154)
@@ -21,6 +21,10 @@ import requests # Looks at the API data
 import csv # Accesses and modifies spreadsheets
 from datetime import datetime # Needed to get most current effective date
 import json # Makes the variables work with a config file
+
+# Libraries for a progress bar animation
+import tkinter as tk # Python's built-in GUI library
+from tkinter import ttk # Contains styled wigets like progress bars
 
 # Stuff for getting the data on a shared Google Sheet
 import gspread
@@ -51,6 +55,20 @@ def format_phone(number):
     # just return non-formatted numbers
     return number
 
+
+#Progress bar shenanagins
+root = tk.Tk() # Creates the main GUI window
+root.title("Running Program") # Sets the window title
+root.geometry("400x120") # Sets the window size
+
+progress_var = tk.IntVar() # A variable that can be liked to a widget
+progress = ttk.Progressbar(root, variable=progress_var, maximum=100) # Creates the bar and updates it every time progress_var is set. Full bar is set at 100%
+progress.pack(fill="x", expand=True, padx=20, pady=(20, 10)) # Places the widget in the window with padding
+
+status_label = tk.Label(root, text="Starting...", anchor="center") # Displays text in the popup
+status_label.pack() # Positions the text in the window
+
+
 # Reads the config file to update variables
 with open("config.json") as f:
     config = json.load(f)
@@ -59,6 +77,8 @@ with open("config.json") as f:
 STATE = config["state"]
 SPREADSHEET_ID = config["spreadsheet_id"]
 SHEET_NAME = config["sheet_name"]
+
+
 
 # URL for the main API call
 url = "https://data.transportation.gov/resource/az4n-8mr2.json"
@@ -110,48 +130,54 @@ params = {
 
 dot_lookup = {} # This will map DOTs to their effective date and current current_carrier
 
-while True:
-    # Gets at most 50k rows of data
-    data = get_json(csv_url, params=params, headers=headers)
-    # If there is no more data, end the loop
-    if not data:
-        break
+def fetch_dot_lookup():
+    i = 0
+    while True:
+        # Gets at most 50k rows of data
+        data = get_json(csv_url, params=params, headers=headers)
+        # If there is no more data, end the loop
+        if not data:
+            break
 
-    # Maps DOTs to their effective date and current carrier and stores them in a dictionary so we can look them up
-    for row in data:
-        dot = str(int(row["dot_number"]))
-        effective_date_string = row.get("effective_date", "").strip()
-        current_carrier = row.get("name_company", "").strip()
-        
-        # Prevents an error if there is no effective date
-        try:
-            effective_date = datetime.strptime(effective_date_string, "%m/%d/%Y")
-        except ValueError:
-            effective_date = None
+        # Maps DOTs to their effective date and current carrier and stores them in a dictionary so we can look them up
+        for row in data:
+            dot = str(int(row["dot_number"]))
+            effective_date_string = row.get("effective_date", "").strip()
+            current_carrier = row.get("name_company", "").strip()
+            
+            # Prevents an error if there is no effective date
+            try:
+                effective_date = datetime.strptime(effective_date_string, "%m/%d/%Y")
+            except ValueError:
+                effective_date = None
 
-        # If there isn't another effective date for the company in the
-        # database already, great. Set it.
-        if dot not in dot_lookup:
-            dot_lookup[dot] = {
-                "effective_date": effective_date_string,
-                "parsed_date": effective_date,
-                "current_carrier": current_carrier
-            }
-
-        # If there is another effective date, figure out which date is
-        # more recent and set that one.
-        else:
-            existing_effective_date = dot_lookup[dot]["parsed_date"]
-            if effective_date and (existing_effective_date is None or effective_date > existing_effective_date):
+            # If there isn't another effective date for the company in the
+            # database already, great. Set it.
+            if dot not in dot_lookup:
                 dot_lookup[dot] = {
                     "effective_date": effective_date_string,
                     "parsed_date": effective_date,
                     "current_carrier": current_carrier
                 }
-    # Keep the loop going
-    params["$offset"] += 50000
-    # This way I know something is actually happening
-    print("Loading...")
+
+            # If there is another effective date, figure out which date is
+            # more recent and set that one.
+            else:
+                existing_effective_date = dot_lookup[dot]["parsed_date"]
+                if effective_date and (existing_effective_date is None or effective_date > existing_effective_date):
+                    dot_lookup[dot] = {
+                        "effective_date": effective_date_string,
+                        "parsed_date": effective_date,
+                        "current_carrier": current_carrier
+                    }
+        # Keep the loop going
+        params["$offset"] += 50000
+        i += 1
+        print(i)
+        progress_var.set(i * 8)
+        root.update_idletasks()
+
+    
 
 # Data we can get from the first API call (minus cargo)
 data_needed = [
@@ -209,45 +235,95 @@ nice_cargo = {
     "crgo_garbage": "Garbage, Refuse, Trash"
 }
 
+
 filtered_rows = [] # This will contain each row in the spreadsheet as a list
 
-# Takes all the data from the API call to format it nicely for our spreadsheet
-for row in all_data: # For each company
-    filtered_row = [] # This will be one row in the spreadsheet
+def build_filtered_rows(): 
 
-    # Non-cargo Data
-    for key in data_needed:
-        # Phone number formatting
-        if key == "phone":
-            number = str(row.get(key, "")).strip()
-            if number: # If the phone number exists
-                pretty_number = format_phone(number)
-                row[key] = pretty_number
+    # Takes all the data from the API call to format it nicely for our spreadsheet
+    for row in all_data: # For each company
+        filtered_row = [] # This will be one row in the spreadsheet
+
+        # Non-cargo Data
+        for key in data_needed:
+            # Phone number formatting
+            if key == "phone":
+                number = str(row.get(key, "")).strip()
+                if number: # If the phone number exists
+                    pretty_number = format_phone(number)
+                    row[key] = pretty_number
 
 
-        # Add the data to the row for the spreadsheet
-        filtered_row.append(row.get(key, ""))
+            # Add the data to the row for the spreadsheet
+            filtered_row.append(row.get(key, ""))
 
-    # Cargo Data
-    cargo_carried = []
-    for key in cargo_list:
-        # Format the data as a comma-separated list
-        if row.get(key, "") == "X":
-            cargo_carried.append(nice_cargo[key])
-    # Add the list to the row for the spreadsheet
-    filtered_row.append(", ".join(cargo_carried))
+        # Cargo Data
+        cargo_carried = []
+        for key in cargo_list:
+            # Format the data as a comma-separated list
+            if row.get(key, "") == "X":
+                cargo_carried.append(nice_cargo[key])
+        # Add the list to the row for the spreadsheet
+        filtered_row.append(", ".join(cargo_carried))
+        
+        # Get the DOT so we can look up the extra data
+        dot = str(row.get("dot_number", "")).strip()
+        extra_data = dot_lookup.get(dot, {})
+
+        # Add the extra data to the row
+        filtered_row.append(extra_data.get("effective_date", ""))
+        filtered_row.append(extra_data.get("current_carrier", ""))
+        
+        # Add the row to the spreadsheet
+        filtered_rows.append(filtered_row)
+    progress_var.set(90)
+    root.update_idletasks()
     
-    # Get the DOT so we can look up the extra data
-    dot = str(row.get("dot_number", "")).strip()
-    extra_data = dot_lookup.get(dot, {})
+# Runs the main program and updates the progress bar/text
+def main_process():
+    root.update_idletasks()
+    status_label.config(text="Processing Data...")
+    fetch_dot_lookup() # Runs the part that maps dots to effective dates
+    build_filtered_rows() # Runs the part that parses the data
+    status_label.config(text="          Populating Sheet...          ")
+    progress_var.set(90) # Fully fills the progress bar
+    root.update_idletasks()
+    root.after(3000, progress_var.set(100))
+    root.update_idletasks()
 
-    # Add the extra data to the row
-    filtered_row.append(extra_data.get("effective_date", ""))
-    filtered_row.append(extra_data.get("current_carrier", ""))
+    # Wait before closing
+    root.after(3000, root.destroy)
+
+root.after(100, main_process()) # Runs the program 100ms after the window opens
+
+# Sort by effective date
+now = datetime.now()
+
+# Makes the key a tuple, so it sorts by the first value first (the position
+# we want it in the spreadsheet) and the second value next (the date)
+def sort_key(item):
+    date_str = item[9]
     
-    # Add the row to the spreadsheet
-    filtered_rows.append(filtered_row)
+    # If the value for effective_date is None, we want it at the 
+    # bottom of the spreadsheet in no particular order
+    if not date_str or date_str.lower() == "none":
+        return (2, None)
     
+    date_obj = datetime.strptime(date_str, "%m/%d/%Y")
+    # If the date is current or upcoming, we want that at the top
+    # of the spreadsheet with the current or closest future date
+    # at the beginning
+    if date_obj >= now:
+        return (0, date_obj)
+    
+    # If the date is in the past, we want it out of the way, but
+    # not mixed in with the None values, so we'll put it before them
+    else:
+        return (1, -date_obj.timestamp()
+    )
+    
+filtered_rows.sort(key=sort_key)
+
 # Headers for the spreadsheet
 spreadsheet_headers = [
     "Dot Number", 
@@ -262,6 +338,7 @@ spreadsheet_headers = [
     "Effective Date", 
     "Current Carrier"
     ]
+
 
 # Writes the data to the spreadsheet
 with open("output.csv", mode="w", newline="", encoding="utf-8") as file:

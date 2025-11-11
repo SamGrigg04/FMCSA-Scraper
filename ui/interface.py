@@ -1,0 +1,16 @@
+# Libraries for a progress bar animation
+import tkinter as tk # Python's built-in GUI library
+from tkinter import ttk # Contains styled wigets like progress bars
+
+
+#Progress bar shenanagins
+root = tk.Tk() # Creates the main GUI window
+root.title("Running Program") # Sets the window title
+root.geometry("400x120") # Sets the window size
+
+progress_var = tk.IntVar() # A variable that can be liked to a widget
+progress = ttk.Progressbar(root, variable=progress_var, maximum=100) # Creates the bar and updates it every time progress_var is set. Full bar is set at 100%
+progress.pack(fill="x", expand=True, padx=20, pady=(20, 10)) # Places the widget in the window with padding
+
+status_label = tk.Label(root, text="Starting...", anchor="center") # Displays text in the popup
+status_label.pack() # Positions the text in the window

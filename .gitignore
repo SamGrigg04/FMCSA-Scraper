@@ -10,6 +10,7 @@ dist/
 # Configs / credentials / secrets
 *.json
 config.json
+secrets.json
 
 # CSV outputs
 *.csv

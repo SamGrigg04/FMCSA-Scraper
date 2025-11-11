@@ -22,10 +22,6 @@ import csv # Accesses and modifies spreadsheets
 from datetime import datetime # Needed to get most current effective date
 import json # Makes the variables work with a config file
 
-# Libraries for a progress bar animation
-import tkinter as tk # Python's built-in GUI library
-from tkinter import ttk # Contains styled wigets like progress bars
-
 # Stuff for getting the data on a shared Google Sheet
 import gspread
 from google.oauth2.service_account import Credentials
@@ -40,7 +36,7 @@ def get_json(url, params=None, headers=None):
     # Returns the data if there was no error
     if response.status_code == 200:
         return response.json()
-    # Raises an exception if there was an error
+    # Raise s an exception if there was an error
     else:
         raise Exception(f"API Error {response.status_code}: {response.text}")
 
@@ -56,17 +52,6 @@ def format_phone(number):
     return number
 
 
-#Progress bar shenanagins
-root = tk.Tk() # Creates the main GUI window
-root.title("Running Program") # Sets the window title
-root.geometry("400x120") # Sets the window size
-
-progress_var = tk.IntVar() # A variable that can be liked to a widget
-progress = ttk.Progressbar(root, variable=progress_var, maximum=100) # Creates the bar and updates it every time progress_var is set. Full bar is set at 100%
-progress.pack(fill="x", expand=True, padx=20, pady=(20, 10)) # Places the widget in the window with padding
-
-status_label = tk.Label(root, text="Starting...", anchor="center") # Displays text in the popup
-status_label.pack() # Positions the text in the window
 
 
 # Reads the config file to update variables
@@ -174,8 +159,8 @@ def fetch_dot_lookup():
         params["$offset"] += 50000
         i += 1
         print(i)
-        progress_var.set(i * 8)
-        root.update_idletasks()
+        # progress_var.set(i * 8)
+        # root.update_idletasks()
 
     
 
@@ -188,7 +173,8 @@ data_needed = [
     "email_address", 
     "power_units", 
     "total_drivers", 
-    "classdef" 
+    "classdef",
+    "cargo" 
     ]
 # All possible cargo types
 cargo_list = [
@@ -236,6 +222,9 @@ nice_cargo = {
 }
 
 
+
+# This probably goes in spreadsheet_utils
+
 filtered_rows = [] # This will contain each row in the spreadsheet as a list
 
 def build_filtered_rows(): 
@@ -276,9 +265,10 @@ def build_filtered_rows():
         
         # Add the row to the spreadsheet
         filtered_rows.append(filtered_row)
-    progress_var.set(90)
-    root.update_idletasks()
-    
+    # progress_var.set(90)
+    # root.update_idletasks()
+
+"""
 # Runs the main program and updates the progress bar/text
 def main_process():
     root.update_idletasks()
@@ -295,7 +285,7 @@ def main_process():
     root.after(3000, root.destroy)
 
 root.after(100, main_process()) # Runs the program 100ms after the window opens
-
+"""
 # Sort by effective date
 now = datetime.now()
 

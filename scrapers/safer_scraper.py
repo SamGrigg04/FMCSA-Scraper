@@ -12,7 +12,7 @@ def run(params, headers, config, check_count = True):
     headers = headers.copy()
     data = []
 
-    rows = dataset_rows(url, params) if check_count else None
+    rows = dataset_rows(url, params, headers) if check_count else None
     print(f'rows: {rows}')
 
     # If more than 50k rows, pagination is nescessary

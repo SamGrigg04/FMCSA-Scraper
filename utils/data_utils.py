@@ -75,10 +75,10 @@ def format_cargo(row):
     return
 
 # Probably just use this one for loading bar purposes
-def dataset_rows(url, params):
+def dataset_rows(url, params, headers):
     params = params.copy()
     params["$select"] = "count(*)"
-    return int(get_json(url, params)[0]["count"])
+    return int(get_json(url, params, headers)[0]["count"])
 
 # Combines two data sets based on dot number
 # TODO: This will need some testing. I don't
@@ -175,10 +175,10 @@ def in_date_range(data, date_field, start_date=None, end_date=None):
         print("Start End Error")
 
     # Sort the data (newest first)
-    rdata = sorted(
+    data = sorted(
         data,
         key=lambda x: datetime.strptime(x.get(date_field, "01/01/1900"), "%m/%d/%Y"),
-        reverse=True
+        reverse=False
     )
 
     filtered = []

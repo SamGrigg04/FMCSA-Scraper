@@ -66,6 +66,7 @@ def main():
             ]
         
     elif config["renew"] == "True":
+        print("running renew")
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -74,7 +75,7 @@ def main():
         safer_data = safer_scraper.run(params, headers, config)
         params = {}
         date_data = effective_date_scraper.run(params, headers, config)
-        business_data = auth_scraper.run(config) # Gets how long they've been in business
+        business_data = auth_scraper.run(params, headers, config) # Gets how long they've been in business
         combined_data_1 = combine_lists_dot(safer_data, date_data)
         combined_data_2 = combine_lists_dot(combined_data_1, business_data)
         parsed_data = has_value(combined_data_2, "effective_date")

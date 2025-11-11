@@ -9,7 +9,7 @@ def main():
     config = load_config()
     secrets = load_secrets()
 
-    if config["state_spreadsheet"]:
+    if config["state_spreadsheet"] == "True":
         params = {
             "phy_state": config["state"], 
             "carrier_operation": "A", # Interstate
@@ -38,7 +38,8 @@ def main():
             "name_company"
             ]
 
-    elif config["next_cancel"]:
+    elif config["next_cancel"] == "True":
+        print("running next cancel")
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -64,7 +65,7 @@ def main():
             "name_company"
             ]
         
-    elif config["renew"]:
+    elif config["renew"] == "True":
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -96,7 +97,7 @@ def main():
             ]
     """
     TODO:
-    elif config["new_venture"]:
+    elif config["new_venture"] == "True":
         params = {
             "classdef": "none",
             "application_status": "pending"

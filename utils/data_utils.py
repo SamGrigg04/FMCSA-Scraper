@@ -168,6 +168,19 @@ def in_date_range(data, date_field, start_date=None, end_date=None):
     if end_date is None:
         end_date = start_date + timedelta(days=30)
 
+    try:
+        start_date = datetime.strptime(start_date, "%m/%d/%Y")
+        end_date = datetime.strptime(end_date, "%m/%d/%Y")
+    except (ValueError, TypeError):
+        print("Start End Error")
+
+    # Sort the data (newest first)
+    rdata = sorted(
+        data,
+        key=lambda x: datetime.strptime(x.get(date_field, "01/01/1900"), "%m/%d/%Y"),
+        reverse=True
+    )
+
     filtered = []
     for row in data:
         date_str = row.get(date_field, "")

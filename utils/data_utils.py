@@ -77,7 +77,7 @@ def format_cargo(row):
 # Probably just use this one for loading bar purposes
 def dataset_rows(url, params, headers):
     params = params.copy()
-    params["$select"] = "count(*)"
+    params["$select"] = "count(*) as count"
     return int(get_json(url, params, headers)[0]["count"])
 
 # Combines two data sets based on dot number

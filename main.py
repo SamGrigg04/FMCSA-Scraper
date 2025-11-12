@@ -75,11 +75,15 @@ def main():
         safer_data = safer_scraper.run(params, headers, config)
         params = {}
         date_data = effective_date_scraper.run(params, headers, config)
+        params = {
+            "$where": "original_action_desc in ('GRANTED','REINSTATED') AND (disp_action_desc IS NULL OR disp_action_desc in ('TRANSFERRED','TRANSFER CONSUMMATED'))",
+        }
         business_data = auth_scraper.run(params, headers, config) # Gets how long they've been in business
         combined_data_1 = combine_lists_dot(safer_data, date_data)
         combined_data_2 = combine_lists_dot(combined_data_1, business_data)
         parsed_data = has_value(combined_data_2, "effective_date")
-        parsed_data = in_date_range(parsed_data, "cancl_effective_date", config["start_date"], config["end_date"])
+        parsed_data = has_value(parsed_data, "original_action_desc")
+        parsed_data = in_date_range(parsed_data, "effective_date", config["start_date"], config["end_date"])
 
         data_needed = [
             "dot_number", 

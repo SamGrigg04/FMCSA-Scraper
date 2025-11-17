@@ -1,9 +1,3 @@
-"""
-load_config()
-save_config()
-update_config()
-"""
-
 import json
 import os
 

@@ -5,7 +5,6 @@ from utils.data_utils import dataset_rows, format_phone, format_cargo
 
 
 def run(params, headers, config, check_count = True):
-    print("running safer scraper")
     # This is the API we're hitting
     url = "https://data.transportation.gov/resource/az4n-8mr2.json"
     params = params.copy()

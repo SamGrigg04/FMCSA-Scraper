@@ -1,5 +1,5 @@
 # from ui.interface.py import ___ (lauch tkinter UI)
-from scrapers import safer_scraper, effective_date_scraper, auth_scraper
+from scrapers import act_pend_insur_all_with_history_scraper, auth_hist_all_with_history_scraper, company_census_scraper
 from utils.config_utils import load_config, load_secrets
 from utils.data_utils import combine_lists_dot, has_value, in_date_range
 from utils.spreasheet_utils import write_to_sheets
@@ -16,9 +16,9 @@ def main():
             "status_code": "A" # Active status
             }
         headers = {"X-App-Token": secrets["app_token"]}
-        safer_data = safer_scraper.run(params, headers, config)
+        safer_data = company_census_scraper.run(params, headers, config)
         params = {}
-        date_data = effective_date_scraper.run(params, headers, config)
+        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, config)
         combined_data = combine_lists_dot(safer_data, date_data)
         filtered_data = has_value(combined_data, "effective_date")
         parsed_data = has_value(filtered_data, "cargo_carried")
@@ -43,9 +43,9 @@ def main():
             "status_code": "A"
         }
         headers = {"X-App-Token": secrets["app_token"]}
-        safer_data = safer_scraper.run(params, headers, config)
+        safer_data = company_census_scraper.run(params, headers, config)
         params = {}
-        date_data = effective_date_scraper.run(params, headers, config)
+        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, config)
         combined_data = combine_lists_dot(safer_data, date_data)
         parsed_data = has_value(combined_data, "cancl_effective_date")
         parsed_data = in_date_range(parsed_data, "cancl_effective_date", config["start_date"], config["end_date"])
@@ -69,13 +69,13 @@ def main():
             "status_code": "A"
             }
         headers = {"X-App-Token": secrets["app_token"]}
-        safer_data = safer_scraper.run(params, headers, config)
+        safer_data = company_census_scraper.run(params, headers, config)
         params = {}
-        date_data = effective_date_scraper.run(params, headers, config)
+        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, config)
         params = {
             "$where": "original_action_desc in ('GRANTED','REINSTATED') AND (disp_action_desc IS NULL OR disp_action_desc in ('TRANSFERRED','TRANSFER CONSUMMATED'))",
         }
-        business_data = auth_scraper.run(params, headers, config) # Gets how long they've been in business
+        business_data = auth_hist_all_with_history_scraper.run(params, headers, config) # Gets how long they've been in business
         combined_data_1 = combine_lists_dot(safer_data, date_data)
         combined_data_2 = combine_lists_dot(combined_data_1, business_data)
         parsed_data = has_value(combined_data_2, "effective_date")

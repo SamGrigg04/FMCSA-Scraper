@@ -23,7 +23,6 @@ def main():
         filtered_data = has_value(combined_data, "effective_date")
         parsed_data = has_value(filtered_data, "cargo_carried")
 
-        print(f"Parsed data length: {len(parsed_data)}")
         data_needed = [
             "dot_number", 
             "legal_name", 
@@ -39,7 +38,6 @@ def main():
             ]
 
     elif config["next_cancel"] == "True":
-        print("running next cancel")
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -66,7 +64,6 @@ def main():
             ]
         
     elif config["renew"] == "True":
-        print("running renew")
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -102,6 +99,10 @@ def main():
             ]
     """
     TODO:
+    # Pending Application
+    # No Authority Granted
+    # No insurance on file
+
     elif config["new_venture"] == "True":
         params = {
             "classdef": "none",
@@ -112,19 +113,16 @@ def main():
         application_scraper.run()
 
         data_needed = [
-            "classdef", # I think that's authority. should be none
-            "application_status", 
-            "insurance_on_file", # could be blank, but better if not i guess
+            # Application Status (pending)
+            # Authority Granted (none)
+            # Insurance on File (none)
+            # Company Name
+            # Email
+            # Phone Number
+            # Most Recent Authority Granted/Reinstated Date
+            # Cargo Carried
 
-            "current_carrier", 
-
-            # This info might come from the same scraper since they might not have a dot number yet
-            "phone", 
-            "legal_name",
-            "email",
-            "cargo", 
-
-            "reinstated_date or if not latest_granted_date", 
+            # dot number
         ]
         """
 

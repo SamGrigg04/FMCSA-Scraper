@@ -4,7 +4,6 @@ from utils.data_utils import dataset_rows, get_latest_date
 
 
 def run(params, headers, config, check_count = True):
-    print("running effective_date_scraper")
     url = "https://data.transportation.gov/resource/qh9u-swkp.json"
 
     params = params.copy()

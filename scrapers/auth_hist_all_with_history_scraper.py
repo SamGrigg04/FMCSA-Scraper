@@ -5,7 +5,6 @@ from utils.data_utils import dataset_rows, get_latest_date, find_how_long
 
 
 def run(params, headers, config, check_count = True):
-    print("Running Auth Scraper")
     url = "https://data.transportation.gov/resource/9mw4-x3tu.json"
 
     params = params.copy()

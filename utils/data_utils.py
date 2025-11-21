@@ -77,8 +77,7 @@ def dataset_rows(url, params, headers):
     return int(get_json(url, params, headers)[0]["count"])
 
 # Combines two data sets based on dot number
-# TODO: This will need some testing. I don't
-# fully understand it yet.
+# list1 does not accept additional values from list2
 def combine_lists_dot(list1, list2):
     
     # This will be a reference list with all
@@ -98,8 +97,6 @@ def combine_lists_dot(list1, list2):
         if dot in merged_dict:
             # Merge dictionaries: values in list1 take precedence if keys overlap
             merged_dict[dot] = {**dict2, **merged_dict[dot]}
-        # else:
-        #     merged_dict[dot] = dict2.copy()
 
     # Convert back to list
     return list(merged_dict.values())
@@ -196,3 +193,19 @@ def sort_dot(data):
         key=lambda x: int(x.get("dot_number", "")),
         reverse=True
     )
+
+def pending_app(data):
+    for row in data:
+        pending_list = []
+        if row.get("common_app_pend", "") == "Y":
+            row.pop("common_app_pend")
+            pending_list.append("Common")
+        if row.get("contract_app_pend", "") == "Y":
+            row.pop("contract_app_pend")
+            pending_list.append("Contract")
+        if row.get("broker_app_pend", "") == "Y":
+            row.pop("broker_app_pend")
+            pending_list.append("Broker")
+        row["application_pending"] = ", ".join(pending_list)
+    return data
+        

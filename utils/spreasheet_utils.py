@@ -47,6 +47,7 @@ def write_to_sheets(raw_data, data_needed, config, secrets):
     # Sends the values to Google in chunks
     # Instead of worksheet.update(range_name=f"A2:{rowcol_to_a1(num_rows+1, num_cols)}", values=values)
     for i in range(0, len(values), 1000):
+        # TODO: Add error handling. I overwhelmed the API once with too many requests
         chunk = values[i:i+1000]
         start_row = i + 2
         end_row = start_row + len(chunk) - 1

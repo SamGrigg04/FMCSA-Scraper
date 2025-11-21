@@ -113,27 +113,29 @@ def main():
     elif config["new_venture"] == "True":
         params = {
             "$where": "(docket_number LIKE 'MC%') " # Starts with MC
-                    "AND (common_stat = 'N' OR contract_stat = 'N' OR broker_stat = 'N') " # Not active
+                    "AND dot_number != '00000000' "
+                    "AND min_cov_amount != '00000' " # Insurance required
+                    "AND bipd_file = '00000' " # No insurance already on file
                     "AND ((common_stat = 'N' AND common_app_pend = 'Y') " # If __ not active and __ is pending
                     "OR (contract_stat = 'N' AND contract_app_pend = 'Y') "
-                    "OR (broker_stat = 'N' AND broker_app_pend = 'Y')) "
-                    "AND min_cov_amount > 0 " # Insurance required
-                    "AND bipd_file = 0" # No insurance already on file
+                    "OR (broker_stat = 'N' AND broker_app_pend = 'Y'))"
         }
         headers = {"X-App-Token": secrets["app_token"]}
         venture_data = carrier_all_with_history_scraper.run(params, headers, config)
-        params = {}
-        safer_data = company_census_scraper(params, headers, config)
+        print(len(venture_data))
+        params = {
+            "carrier_operation": "A",
+            "docket1_status_code": "A"
+        }
+        safer_data = company_census_scraper.run(params, headers, config)
         parsed_data = combine_lists_dot(venture_data, safer_data) # last one always has to be parsed data to put on the spreadsheet
-
         data_needed = [
             "dot_number", 
             "legal_name", 
             "dba_name", 
             "phone", 
             "email_address", 
-            "name_company",
-            "classdef",
+            "min_cov_amount",
             "application_pending"
         ]
 

@@ -3,7 +3,7 @@ https://data.transportation.gov/Trucking-and-Motorcoaches/Carrier-All-With-Histo
 """
 
 from utils.network_utils import get_json
-from utils.data_utils import dataset_rows, sort_dot
+from utils.data_utils import dataset_rows, sort_dot, pending_app
 # from ui.interface import progress bar updater
 
 
@@ -31,8 +31,6 @@ def run(params, headers, config, check_count = True):
         data.extend(page)
         offset += len(page)
 
-        # what application(s) is pending
-
         print(f'fetched {offset} rows')
 
         if rows and offset >= rows:
@@ -43,6 +41,8 @@ def run(params, headers, config, check_count = True):
         print("No data fit your parameters.")
         return []
     
+    print("parsing data")
+    data = pending_app(data)
     data = sort_dot(data)
     
     return data

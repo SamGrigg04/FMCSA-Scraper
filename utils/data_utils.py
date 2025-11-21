@@ -190,4 +190,9 @@ def in_date_range(data, date_field, start_date=None, end_date=None):
 
     return filtered
 
-
+def sort_dot(data):
+    return sorted(
+        data,
+        key=lambda x: int(x.get("dot_number", "")),
+        reverse=True
+    )

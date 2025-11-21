@@ -1,5 +1,17 @@
+"""
+Author: Samuel Grigg
+Last Updated: 11/17/2025
+
+Datasets: https://data.transportation.gov/browse?sortBy=relevance&pageSize=20&category=Trucking+and+Motorcoaches&limitTo=datasets
+
+Notes:
+
+
+"""
+
+
 # from ui.interface.py import ___ (lauch tkinter UI)
-from scrapers import act_pend_insur_all_with_history_scraper, auth_hist_all_with_history_scraper, company_census_scraper
+from scrapers import act_pend_insur_all_with_history_scraper, auth_hist_all_with_history_scraper, company_census_scraper, carrier_all_with_history_scraper
 from utils.config_utils import load_config, load_secrets
 from utils.data_utils import combine_lists_dot, has_value, in_date_range
 from utils.spreasheet_utils import write_to_sheets
@@ -97,34 +109,33 @@ def main():
             "orig_served_date",
             "business_duration"
             ]
-    """
-    TODO:
-    # Pending Application
-    # No Authority Granted
-    # No insurance on file
 
     elif config["new_venture"] == "True":
         params = {
-            "classdef": "none",
-            "application_status": "pending"
+            "$where": "(docket_number LIKE 'MC%') " # Starts with MC
+                    "AND (common_stat = 'N' OR contract_stat = 'N' OR broker_stat = 'N') " # Not active
+                    "AND ((common_stat = 'N' AND common_app_pend = 'Y') " # If __ not active and __ is pending
+                    "OR (contract_stat = 'N' AND contract_app_pend = 'Y') "
+                    "OR (broker_stat = 'N' AND broker_app_pend = 'Y')) "
+                    "AND min_cov_amount > 0 " # Insurance required
+                    "AND bipd_file = 0" # No insurance already on file
         }
         headers = {"X-App-Token": secrets["app_token"]}
-        
-        application_scraper.run()
+        venture_data = carrier_all_with_history_scraper.run(params, headers, config)
+        params = {}
+        safer_data = company_census_scraper(params, headers, config)
+        parsed_data = combine_lists_dot(venture_data, safer_data) # last one always has to be parsed data to put on the spreadsheet
 
         data_needed = [
-            # Application Status (pending)
-            # Authority Granted (none)
-            # Insurance on File (none)
-            # Company Name
-            # Email
-            # Phone Number
-            # Most Recent Authority Granted/Reinstated Date
-            # Cargo Carried
-
-            # dot number
+            "dot_number", 
+            "legal_name", 
+            "dba_name", 
+            "phone", 
+            "email_address", 
+            "name_company",
+            "classdef",
+            "application_pending"
         ]
-        """
 
     print("Writing to sheets")
     write_to_sheets(parsed_data, data_needed, config, secrets)

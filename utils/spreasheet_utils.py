@@ -29,6 +29,10 @@ def write_to_sheets(raw_data, data_needed, config, secrets):
     spreadsheet = client.open_by_key(config["spreadsheet_id"])
     worksheet = spreadsheet.worksheet(config["sheet_name"])
 
+    # Stops some corner cases where data gets written at a later row
+    if worksheet.row_count > 100:
+        worksheet.resize(rows=100)
+
     # Ensure worksheet has enough rows and columns
     required_rows = len(df) + 1
     if worksheet.row_count < required_rows:

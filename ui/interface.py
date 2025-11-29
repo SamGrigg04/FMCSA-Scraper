@@ -1,6 +1,7 @@
 # Libraries for a progress bar animation
 import tkinter as tk # Python's built-in GUI library
 from tkinter import ttk # Contains styled wigets like progress bars
+import threading # So the UI can run at the same time as the program without interference
 
 
 #Progress bar shenanagins
@@ -14,3 +15,21 @@ progress.pack(fill="x", expand=True, padx=20, pady=(20, 10)) # Places the widget
 
 status_label = tk.Label(root, text="Starting...", anchor="center") # Displays text in the popup
 status_label.pack() # Positions the text in the window
+
+def update_progress(percent):
+    progress_var.set(percent)
+    root.update_idletasks()
+    
+
+def update_status(message):
+    status_label.config(text=message)
+    root.update_idletasks()
+
+start_button = tk.button(root, text="Run", command=start_scraper)
+start_button.pack(pady=5)
+
+root.mainloop()
+
+def start_scraper():
+    thread = threading.Thread(target=run)
+    thread.start()

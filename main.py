@@ -14,7 +14,7 @@ Notes:
 from scrapers import act_pend_insur_all_with_history_scraper, auth_hist_all_with_history_scraper, company_census_scraper, carrier_all_with_history_scraper
 from utils.config_utils import load_config, load_secrets
 from utils.data_utils import combine_lists_dot, has_value, in_date_range
-from utils.spreasheet_utils import write_to_sheets
+from utils.spreadsheet_utils import write_to_sheets
 
 def main():
     # load config data

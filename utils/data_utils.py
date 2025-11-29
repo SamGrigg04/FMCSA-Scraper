@@ -141,8 +141,7 @@ def get_latest_date(data, date_type):
         date_obj = try_parse_date(date_str)
         if date_obj is None:
             continue
-            #TODO: put an error here?
-
+        
         if dot not in latest or date_obj > latest[dot]["_parsed_date"]:
             latest[dot] = {**entry, "_parsed_date": date_obj}
 

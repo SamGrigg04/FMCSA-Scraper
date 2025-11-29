@@ -21,7 +21,7 @@ def main():
     config = load_config()
     secrets = load_secrets()
 
-    if config["state_spreadsheet"] == "True":
+    if config["state_spreadsheet"]:
         params = {
             "phy_state": config["state"], 
             "carrier_operation": "A", # Interstate
@@ -49,7 +49,7 @@ def main():
             "name_company"
             ]
 
-    elif config["next_cancel"] == "True":
+    elif config["next_cancel"]:
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -75,7 +75,7 @@ def main():
             "name_company"
             ]
         
-    elif config["renew"] == "True":
+    elif config["renew"]:
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -110,7 +110,7 @@ def main():
             "business_duration"
             ]
 
-    elif config["new_venture"] == "True":
+    elif config["new_venture"]:
         params = {
             "$where": "(docket_number LIKE 'MC%') " # Starts with MC
                     "AND dot_number != '00000000' "

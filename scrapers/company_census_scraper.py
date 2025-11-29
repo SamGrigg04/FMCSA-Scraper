@@ -15,7 +15,11 @@ def run(params, headers, config, check_count = True):
     headers = headers.copy()
     data = []
 
-    rows = dataset_rows(url, params, headers) if check_count else None
+    try:
+        rows = dataset_rows(url, params, headers) if check_count else None
+    except Exception as e:
+        print(f"Error fetching dataset row count for {url}: {e}")
+        return []
     print(f'rows: {rows}')
 
     # If more than 50k rows, pagination is nescessary
@@ -23,7 +27,11 @@ def run(params, headers, config, check_count = True):
     params["$limit"] = 50000
     while True:
         params["$offset"] = offset
-        page = get_json(url, params, headers)
+        try:
+            page = get_json(url, params, headers)
+        except Exception as e:
+            print(f"Error fetching data from {url} at offset {offset}: {e}")
+            return []
         if not page:
             break
 
@@ -32,7 +40,12 @@ def run(params, headers, config, check_count = True):
             format_cargo(row)
             row["phone"] = format_phone(row.get("phone", ""))
 
-        data.extend(page)
+        try:
+            data.extend(page)
+        except Exception as e:
+            # For now if there is an error it just skips the page and moves on
+            print(f"Warning: failed to extend data at offset {offset} for {url}: {e}")
+            pass
         offset += len(page)
 
         print(f'fetched {offset} rows')

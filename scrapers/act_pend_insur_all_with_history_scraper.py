@@ -14,7 +14,11 @@ def run(params, headers, config, check_count = True):
     headers = headers.copy()
     data = []
 
-    rows = dataset_rows(url, params, headers) if check_count else None
+    try:
+        rows = dataset_rows(url, params, headers) if check_count else None
+    except Exception as e:
+        print(f"Error fetching dataset row count for {url}: {e}")
+        return []
     print(f'rows: {rows}')
 
 
@@ -24,14 +28,22 @@ def run(params, headers, config, check_count = True):
 
     while True:
         params["$offset"] = offset
-        page = get_json(url, params, headers)
+        try:
+            page = get_json(url, params, headers)
+        except Exception as e:
+            print(f"Error fetching data from {url} at offset {offset}: {e}")
+            return []
         if not page:
             break
 
         for row in page:
             row["dot_number"] = row.get("dot_number", "").zfill(8)
-        
-        data.extend(page)
+
+        try:
+            data.extend(page)
+        except Exception as e:
+            print(f"Warning: failed to extend data at offset {offset} for {url}: {e}")
+            pass
         offset += len(page)
 
         print(f'fetched {offset} rows')

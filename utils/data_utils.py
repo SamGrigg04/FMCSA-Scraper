@@ -1,5 +1,32 @@
 from utils.network_utils import get_json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+
+# Make date-like values into actual dates or die trying
+def try_parse_date(value):
+    if value is None:
+        return None
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        s = value.strip()
+
+        # Try the common US format first
+        for fmt in ("%m/%d/%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(s, fmt).date()
+            except Exception:
+                pass
+
+        # Try ISO formats next
+        if "T" in s:
+            date_part = s.split("T", 1)[0]
+            try:
+                return datetime.strptime(date_part, "%Y-%m-%d").date()
+            except Exception:
+                pass
+    return None
 
 
 # Makes the phone number pretty
@@ -110,15 +137,14 @@ def get_latest_date(data, date_type):
 
     for entry in data:
         dot = entry["dot_number"]
-        date_str = entry.get(date_type, "")
-
-        try:
-            date = datetime.strptime(date_str, "%m/%d/%Y")
-        except (ValueError, TypeError):
+        date_str = entry.get(date_type, None)
+        date_obj = try_parse_date(date_str)
+        if date_obj is None:
             continue
+            #TODO: put an error here?
 
-        if dot not in latest or date > latest[dot]["_parsed_date"]:
-            latest[dot] = {**entry, "_parsed_date": date}
+        if dot not in latest or date_obj > latest[dot]["_parsed_date"]:
+            latest[dot] = {**entry, "_parsed_date": date_obj}
 
     for dot in latest:
         latest[dot].pop("_parsed_date")
@@ -128,14 +154,17 @@ def get_latest_date(data, date_type):
 def find_how_long(data):
     # take the orig_served_date and find how long between then and today
     # add that value to the dict with the key "business_duration"
-    today = datetime.now()
+    today = date.today()
     for row in data:
         date_str = row.get("orig_served_date", "")
         try:
-            served_date = datetime.strptime(date_str, "%m/%d/%Y")
-            delta = today - served_date
-            # store duration in years with one decimal, e.g. "3.5 years"
-            row["business_duration"] = round(delta.days / 365, 1)
+            served_date = try_parse_date(date_str)
+            if served_date:
+                delta = today - served_date
+                # store duration in years with one decimal, e.g. "3.5 years"
+                row["business_duration"] = round(delta.days / 365, 1)
+            else:
+                row["business_duration"] = ""
         except (ValueError, TypeError):
             # if date is invalid or missing
             row["business_duration"] = ""
@@ -157,32 +186,43 @@ def has_value(data, field):
 def in_date_range(data, date_field, start_date=None, end_date=None):
     # Default: from today to one month in the future
     if start_date is None:
-        start_date = datetime.now()
+        start_date = date.today()
     if end_date is None:
         end_date = start_date + timedelta(days=30)
 
+    # Normalize start/end: accept strings or date objects
     try:
-        start_date = datetime.strptime(start_date, "%m/%d/%Y")
-        end_date = datetime.strptime(end_date, "%m/%d/%Y")
-    except (ValueError, TypeError):
+        if not isinstance(start_date, (date, datetime)):
+            # if the date fails to parse nicely, default to today's date
+            start_date = try_parse_date(start_date) or date.today()
+        elif isinstance(start_date, datetime):
+            start_date = start_date.date()
+
+        if not isinstance(end_date, (date, datetime)):
+            # if the date fails to parse nicely, default to 30 days from now
+            end_date = try_parse_date(end_date) or (start_date + timedelta(days=30))
+        elif isinstance(end_date, datetime):
+            end_date = end_date.date()
+    except Exception:
+        # If all else fails print an error and default to today and 30 days from today
         print("Start End Error")
+        start_date = date.today()
+        end_date = start_date + timedelta(days=30)
 
     # Sort the data (newest first)
     data = sorted(
         data,
-        key=lambda x: datetime.strptime(x.get(date_field, "01/01/1900"), "%m/%d/%Y"),
+        key=lambda x: try_parse_date(x.get(date_field)) or date(1900, 1, 1),
         reverse=False
     )
 
     filtered = []
     for row in data:
-        date_str = row.get(date_field, "")
-        try:
-            date = datetime.strptime(date_str, "%m/%d/%Y")
-        except ValueError:
+        date_obj = try_parse_date(row.get(date_field))
+        if date_obj is None:
             continue  # skip rows with invalid or missing dates
 
-        if start_date <= date <= end_date:
+        if start_date <= date_obj <= end_date:
             filtered.append(row)
 
     return filtered

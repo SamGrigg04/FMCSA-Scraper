@@ -1,13 +1,9 @@
 import requests
 from requests.exceptions import RequestException
 
-
+# Does a GET request and returns the parsed JSON
+# Error and retry handling
 def get_json(url, params=None, headers=None, timeout=30, retries=2):
-    """
-    Do a GET request and return parsed JSON.
-    - handles non-200 errors
-    - retries if needed with a linear backoff
-    """
     session = requests.Session()
     try:
         attempt = 0

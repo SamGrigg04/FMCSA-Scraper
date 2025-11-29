@@ -125,10 +125,12 @@ def main():
         print(len(venture_data))
         params = {
             "carrier_operation": "A",
-            "docket1_status_code": "A"
+            "docket1_status_code":"A",
+            "docket1prefix": "MC"
         }
         safer_data = company_census_scraper.run(params, headers, config)
-        parsed_data = combine_lists_dot(venture_data, safer_data) # last one always has to be parsed data to put on the spreadsheet
+        combined_data = combine_lists_dot(venture_data, safer_data) 
+        parsed_data = has_value(combined_data, "phone") # last one always has to be parsed data to put on the spreadsheet
         data_needed = [
             "dot_number", 
             "legal_name", 

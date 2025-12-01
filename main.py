@@ -141,8 +141,11 @@ def main():
             "application_pending"
         ]
 
-    print("Writing to sheets")
-    write_to_sheets(parsed_data, data_needed, config, secrets)
+    if parsed_data and data_needed:
+        print("Writing to sheets")
+        write_to_sheets(parsed_data, data_needed, config, secrets)
+    else:
+        print("writing to sheets error")
 
     #TODO: Launch the UI
 

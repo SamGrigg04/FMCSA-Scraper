@@ -20,6 +20,9 @@ def main():
     # load config data
     config = load_config()
     secrets = load_secrets()
+    # for error handling later if needed
+    parsed_data = None
+    data_needed = None
 
     if config.get("state_spreadsheet", False):
         params = {
@@ -141,11 +144,15 @@ def main():
             "application_pending"
         ]
 
+    # Writes to sheets if there is data and an option selected in config
     if parsed_data and data_needed:
         print("Writing to sheets")
-        write_to_sheets(parsed_data, data_needed, config, secrets)
-    elif not(config["next_cancel"] or config["renew"] or config["state_spreadsheet"] or config["new_venture"]):
-        print("config error")
+        try:
+            write_to_sheets(parsed_data, data_needed, config, secrets)
+        except Exception as e:
+            print(f"Error writing to sheets: {e}")
+    elif not (config.get("next_cancel", False) or config.get("renew", False) or config.get("state_spreadsheet", False) or config.get("new_venture", False)):
+        print("config error: no mode enabled in config.json")
     else:
         print("no data parsed")
 

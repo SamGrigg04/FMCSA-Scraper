@@ -6,6 +6,7 @@ __pycache__/
 # PyInstaller
 build/
 dist/
+*.spec
 
 # Configs / credentials / secrets
 *.json

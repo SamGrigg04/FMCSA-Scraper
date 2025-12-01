@@ -21,7 +21,7 @@ def main():
     config = load_config()
     secrets = load_secrets()
 
-    if config["state_spreadsheet"]:
+    if config.get("state_spreadsheet", False):
         params = {
             "phy_state": config["state"], 
             "carrier_operation": "A", # Interstate
@@ -49,7 +49,7 @@ def main():
             "name_company"
             ]
 
-    elif config["next_cancel"]:
+    elif config.get("next_cancel", False):
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -75,7 +75,7 @@ def main():
             "name_company"
             ]
         
-    elif config["renew"]:
+    elif config.get("renew", False):
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -110,7 +110,7 @@ def main():
             "business_duration"
             ]
 
-    elif config["new_venture"]:
+    elif config.get("new_venture", False):
         params = {
             "$where": "(docket_number LIKE 'MC%') " # Starts with MC
                     "AND dot_number != '00000000' "
@@ -144,8 +144,10 @@ def main():
     if parsed_data and data_needed:
         print("Writing to sheets")
         write_to_sheets(parsed_data, data_needed, config, secrets)
+    elif not(config["next_cancel"] or config["renew"] or config["state_spreadsheet"] or config["new_venture"]):
+        print("config error")
     else:
-        print("writing to sheets error")
+        print("no data parsed")
 
     #TODO: Launch the UI
 

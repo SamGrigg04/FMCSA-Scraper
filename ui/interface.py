@@ -2,6 +2,7 @@
 import tkinter as tk # Python's built-in GUI library
 from tkinter import ttk # Contains styled wigets like progress bars
 import threading # So the UI can run at the same time as the program without interference
+from main import main
 
 
 #Progress bar shenanagins
@@ -25,11 +26,13 @@ def update_status(message):
     status_label.config(text=message)
     root.update_idletasks()
 
-start_button = tk.button(root, text="Run", command=start_scraper)
+def start_scraper():
+    thread = threading.Thread(target=main)
+    thread.start()
+
+start_button = tk.Button(root, text="Run", command=start_scraper)
 start_button.pack(pady=5)
 
 root.mainloop()
 
-def start_scraper():
-    thread = threading.Thread(target=run)
-    thread.start()
+

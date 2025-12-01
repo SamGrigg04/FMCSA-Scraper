@@ -13,6 +13,8 @@ def write_to_sheets(raw_data, data_needed, config, secrets):
         raise ValueError("data_needed is empty; no columns to write")
     if not isinstance(config, dict) or "spreadsheet_id" not in config or "sheet_name" not in config:
         raise ValueError("config must contain 'spreadsheet_id' and 'sheet_name'")
+    if not isinstance(secrets, dict) or "service_account_file" not in secrets or "app_token" not in secrets:
+        raise ValueError("secrets must contain 'service_account_file' and 'app_token'")
     # Build data frame from raw_data
     cooked_data = []
     for row in raw_data:
@@ -50,23 +52,20 @@ def write_to_sheets(raw_data, data_needed, config, secrets):
         try:
             worksheet.add_rows(required_rows - worksheet.row_count)
         except Exception as e:
-            print(f"Warning: failed to add rows: {e}.")
-            return
+            raise Exception(f"Failed to add rows to worksheet: {e}")
 
     required_cols = len(df.columns)
     if worksheet.col_count < required_cols:
         try:
             worksheet.add_cols(required_cols - worksheet.col_count)
         except Exception as e:
-            print(f"Warning: failed to add columns: {e}.")
-            return
+            raise Exception(f"Failed to add columns to worksheet: {e}")
 
     # Clears all old data (except the headers)
     try:
         worksheet.batch_clear([f"A2:{rowcol_to_a1(worksheet.row_count, required_cols)}"])
     except Exception as e:
-        print(f"Warning: failed to clear old data: {e}")
-        return
+        raise Exception(f"Failed to clear old data from worksheet: {e}")
 
     # Converts to the format expected
     values = df.values.tolist()

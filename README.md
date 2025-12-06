@@ -82,5 +82,6 @@ python -m PyInstaller FMCSA_Scraper.spec
 
 * Only file paths need special handling in the frozen EXE; plain strings like API tokens work as-is
 * Progress reporting in the GUI is multi-threaded and updates in real-time
+* You'll need to replace example_config.json and example_secrets.json with the real thing. config.json should generate upon running the program, but secrets.json has to be populated with the actual values
 
 Do you want me to do that?

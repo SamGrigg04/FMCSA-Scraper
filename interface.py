@@ -1,3 +1,4 @@
+from queue import Queue
 import tkinter as tk
 from tkinter import ttk, messagebox
 from tkcalendar import DateEntry # type: ignore
@@ -101,7 +102,7 @@ def run_program(lastFrame):
         
         from main import main as run_main
         global scraper_thread
-        scraper_thread = Thread(target=run_main, daemon=True)
+        scraper_thread = Thread(target=run_main, args=(progress_queue,), daemon=True)
         scraper_thread.start()
     return
 
@@ -193,16 +194,17 @@ def validate_new_venture(*args):
             startbtn.state(["disabled"])
     return
 
-def update_progress(percent):
-    loadingProgress.set(percent)
-    root.update_idletasks()
-    
-def update_status(message):
-    loadingMessage.config(text=message)
-    root.update_idletasks()
+def poll_queue():
+    while not progress_queue.empty():
+        progress, message = progress_queue.get()
+        loadingProgress.set(progress)
+        loadingMessage.config(text=message)
+    root.after(100, poll_queue)
 
-# need this
+
+# need these for stuff
 scraper_thread = None
+progress_queue = Queue()
 
 # Create the root
 root = tk.Tk()
@@ -384,6 +386,6 @@ loadingMessage.grid(row=1)
 loadingFrame.grid_remove()
 
 
-
+poll_queue()
 root.mainloop()
 

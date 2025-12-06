@@ -4,11 +4,8 @@ https://data.transportation.gov/Trucking-and-Motorcoaches/Company-Census-File/az
 
 from utils.network_utils import get_json
 from utils.data_utils import dataset_rows, format_phone, format_cargo
-# from ui.interface import progress bar updater
 
-
-
-def run(params, headers, config, check_count = True):
+def run(params, headers, progress_queue, check_count = True):
     # This is the API we're hitting
     url = "https://data.transportation.gov/resource/az4n-8mr2.json"
     params = params.copy()

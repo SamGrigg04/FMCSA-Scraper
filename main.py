@@ -16,7 +16,8 @@ from utils.config_utils import load_config, load_secrets
 from utils.data_utils import combine_lists_dot, has_value, in_date_range
 from utils.spreadsheet_utils import write_to_sheets
 
-def main():
+def main(progress_queue):
+    progress_queue.put((25, "This is a test"))
     # load config data
     config = load_config()
     secrets = load_secrets()
@@ -31,9 +32,9 @@ def main():
             "status_code": "A" # Active status
             }
         headers = {"X-App-Token": secrets["app_token"]}
-        safer_data = company_census_scraper.run(params, headers, config)
+        safer_data = company_census_scraper.run(params, headers, progress_queue)
         params = {}
-        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, config)
+        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, progress_queue)
         combined_data = combine_lists_dot(safer_data, date_data)
         filtered_data = has_value(combined_data, "effective_date")
         parsed_data = has_value(filtered_data, "cargo_carried")
@@ -58,9 +59,9 @@ def main():
             "status_code": "A"
         }
         headers = {"X-App-Token": secrets["app_token"]}
-        safer_data = company_census_scraper.run(params, headers, config)
+        safer_data = company_census_scraper.run(params, headers, progress_queue)
         params = {}
-        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, config)
+        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, progress_queue)
         combined_data = combine_lists_dot(safer_data, date_data)
         parsed_data = has_value(combined_data, "cancl_effective_date")
         parsed_data = in_date_range(parsed_data, "cancl_effective_date", config["start_date"], config["end_date"])
@@ -84,13 +85,13 @@ def main():
             "status_code": "A"
             }
         headers = {"X-App-Token": secrets["app_token"]}
-        safer_data = company_census_scraper.run(params, headers, config)
+        safer_data = company_census_scraper.run(params, headers, progress_queue)
         params = {}
-        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, config)
+        date_data = act_pend_insur_all_with_history_scraper.run(params, headers, progress_queue)
         params = {
             "$where": "original_action_desc in ('GRANTED','REINSTATED') AND (disp_action_desc IS NULL OR disp_action_desc in ('TRANSFERRED','TRANSFER CONSUMMATED'))",
         }
-        business_data = auth_hist_all_with_history_scraper.run(params, headers, config) # Gets how long they've been in business
+        business_data = auth_hist_all_with_history_scraper.run(params, headers, progress_queue) # Gets how long they've been in business
         combined_data_1 = combine_lists_dot(safer_data, date_data)
         combined_data_2 = combine_lists_dot(combined_data_1, business_data)
         parsed_data = has_value(combined_data_2, "effective_date")
@@ -124,14 +125,14 @@ def main():
                     "OR (broker_stat = 'N' AND broker_app_pend = 'Y'))"
         }
         headers = {"X-App-Token": secrets["app_token"]}
-        venture_data = carrier_all_with_history_scraper.run(params, headers, config)
+        venture_data = carrier_all_with_history_scraper.run(params, headers, progress_queue)
         print(len(venture_data))
         params = {
             "carrier_operation": "A",
             "docket1_status_code":"A",
             "docket1prefix": "MC"
         }
-        safer_data = company_census_scraper.run(params, headers, config)
+        safer_data = company_census_scraper.run(params, headers, progress_queue)
         combined_data = combine_lists_dot(venture_data, safer_data) 
         parsed_data = has_value(combined_data, "phone") # last one always has to be parsed data to put on the spreadsheet
         data_needed = [
@@ -148,16 +149,13 @@ def main():
     if parsed_data and data_needed:
         print("Writing to sheets")
         try:
-            write_to_sheets(parsed_data, data_needed, config, secrets)
+            write_to_sheets(parsed_data, data_needed, config, secrets, progress_queue)
         except Exception as e:
             print(f"Error writing to sheets: {e}")
     elif not config.get("mode"):
         print("config error: no mode enabled in config.json")
     else:
         print("no data parsed")
-
-    #TODO: Launch the UI
-
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ from gspread.utils import rowcol_to_a1
 import time
 
 
-def write_to_sheets(raw_data, data_needed, config, secrets):
+def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
     # Validate inputs
     if not raw_data:
         raise ValueError("raw_data is empty; nothing to write to sheets")

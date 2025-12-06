@@ -4,11 +4,8 @@ https://data.transportation.gov/Trucking-and-Motorcoaches/AuthHist-All-With-Hist
 
 from utils.network_utils import get_json
 from utils.data_utils import dataset_rows, get_latest_date, find_how_long
-# from ui.interface import progress bar updater
 
-
-
-def run(params, headers, config, check_count = True):
+def run(params, headers, progress_queue, check_count = True):
     url = "https://data.transportation.gov/resource/9mw4-x3tu.json"
 
     params = params.copy()

@@ -4,7 +4,7 @@ from tkcalendar import DateEntry # type: ignore
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import threading # So the UI can run at the same time as the program without interference
-from main import main
+# from main import main
 
 # Switches between frames
 def switch_frame(frame, lastFrame=None):
@@ -58,7 +58,7 @@ def switch_frame(frame, lastFrame=None):
             frameObject = lastFrame
         frameObject.grid_remove()
         errorMessageLabel.grid_remove()
-        quitbtn.grid(column=1, row=4, sticky=(tk.S, tk.E))
+        quitbtn.grid(column=0, row=10, sticky=(tk.S))
         nxtbtn.grid_remove()
         backbtn.grid_remove()
         startbtn.grid_remove()
@@ -69,30 +69,28 @@ def switch_frame(frame, lastFrame=None):
         raise ValueError("Something went wrong")
 
 def run_program(lastFrame):
-    """
-    I don't think I actually need this if/elif block anymore, but I'll keep it in for redundancy.
-    Basically there was an issue where if you fill out a frame correctly to activate
-    the start button, and then go back and go into another frame, the start button was
-    still active. To deactivate it, I ran the validation functions. But then I just
-    put the validations in the switch frame function and it works fine now.
-    """
-    if lastFrame == "state":
-        _validate_state()
-    elif lastFrame == "cancel":
-        validate_cancel()
-    elif lastFrame == "renew":
-        validate_renew()
-    elif lastFrame == "newVenture":
-        validate_new_venture()
-    else:
-        errorMessage.set("Congrats, you found a bug!")
+    # Validate one more time before running things
+    valid_frames = {"state", "cancel", "renew", "newVenture"}
+    if lastFrame not in valid_frames:
+        errorMessage.set("You found a bug!")
         errorMessageLabel.grid(row=0, column=0, sticky=(tk.S, tk.W))
-    
+        return
+
+    validators = {
+        "state": _validate_state,
+        "cancel": validate_cancel,
+        "renew": validate_renew,
+        "newVenture": validate_new_venture,
+    }
+
+    validator = validators.get(lastFrame)
+    if validator:
+        validator()
+
     if "disabled" not in startbtn.state():
-        #TODO run the program
-        thread = threading.Thread(target=main)
-        thread.start()
-        pass
+        startbtn.state(["disabled"]) # So the user can't double run
+        # TODO run main in a thread?
+
     return
     
 # Enable the next button upon selecting an option
@@ -175,11 +173,11 @@ def validate_new_venture(*args):
     return
 
 def update_progress(percent):
-    progress_var.set(percent)
+    loadingProgress.set(percent)
     root.update_idletasks()
     
 def update_status(message):
-    status_label.config(text=message)
+    loadingMessage.config(text=message)
     root.update_idletasks()
 
 # Create the root
@@ -257,9 +255,9 @@ newVentureSheetName = tk.StringVar()
 newVentureSheetNameEntry = ttk.Entry(newVentureFrame, textvariable=newVentureSheetName)
 
 # Widgets for the loading frame
-progress_var = tk.IntVar()
-progress = ttk.Progressbar(root, variable=progress_var, maximum=100)
-status_label = tk.Label(root, text="Starting...", anchor="center")
+loadingProgress = tk.IntVar()
+progressBar = ttk.Progressbar(loadingFrame, variable=loadingProgress, mode="determinate", length=500)
+loadingMessage = tk.Label(loadingFrame, text="Starting...")
 
 # Buttons at the bottom
 backbtn = ttk.Button(content, text="Back", command=lambda: (switch_frame("back", option.get())))
@@ -355,7 +353,11 @@ newVentureSheetNameEntry["width"] = 30
 newVentureFrame.grid_remove()
 
 # Loading Frame Layout
-# TODO
+loadingFrame.grid()
+progressBar.grid(row=0)
+loadingMessage.grid(row=1)
+loadingFrame.grid_remove()
+
 
 
 root.mainloop()

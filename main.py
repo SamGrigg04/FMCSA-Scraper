@@ -180,6 +180,3 @@ def main(progress_queue):
     else:
        progress_queue.put((None, "no data parsed"))
 
-if __name__ == "__main__":
-    main()
-

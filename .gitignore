@@ -9,6 +9,7 @@ dist/
 *.spec
 
 # Configs / credentials / secrets
+*.json
 config.json
 secrets.json
 

@@ -83,7 +83,7 @@ def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
         while retry_count < max_retries:
             try:
                 worksheet.update(range_name=range_name, values=chunk)
-                progress_queue.put((end_row/required_rows, f"writing to sheets... (rows {start_row}-{end_row})"))
+                progress_queue.put((end_row/required_rows * 100, f"writing to sheets... (rows {start_row}-{end_row})"))
                 break
             except Exception as e:
                 retry_count += 1

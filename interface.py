@@ -125,7 +125,6 @@ def _on_option_change(*args):
 # Validates the state inputs
 def _validate_state(*args):
     if option.get() == "state":
-        print("validating")
         if len(stateSheetState.get()) > 2:
             errorMessage.set("State must be two letters (e.g UT, VA)")
             errorMessageLabel.grid(column=0, row=9, sticky=(tk.W, tk.S))
@@ -140,7 +139,7 @@ def _validate_state(*args):
         else:
             startbtn.state(["disabled"])
     else:
-        print("BIG ERROR BRO WHAT HAPPENED??? (state)")
+        progress_queue.put((None, "Error validating information"))
     return
 
 def validate_cancel(*args):
@@ -161,7 +160,7 @@ def validate_cancel(*args):
         else:
             startbtn.state(["disabled"])
     else:
-        print("BIG ERROR BRO WHAT HAPPENED??? (cancel)")
+        progress_queue.put((None, "Error validating information"))
     return
 
 def validate_renew(*args):
@@ -182,7 +181,7 @@ def validate_renew(*args):
         else:
             startbtn.state(["disabled"])
     else:
-        print("BIG ERROR BRO WHAT HAPPENED??? (renew)")
+        progress_queue.put((None, "Error validating information"))
     return
 
 def validate_new_venture(*args):
@@ -192,6 +191,8 @@ def validate_new_venture(*args):
                 startbtn.state(["!disabled"])
         else:
             startbtn.state(["disabled"])
+    else:
+        progress_queue.put((None, "Error validating information"))
     return
 
 def poll_queue():
@@ -199,6 +200,8 @@ def poll_queue():
         progress, message = progress_queue.get()
         loadingProgress.set(progress)
         loadingMessage.config(text=message)
+        if  message == "All done!":
+            root.after(5000, root.destroy)
     root.after(100, poll_queue)
 
 

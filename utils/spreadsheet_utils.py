@@ -3,6 +3,7 @@ from google.oauth2.service_account import Credentials
 import pandas as pd
 from gspread.utils import rowcol_to_a1
 import time
+from utils.config_utils import resource_path
 
 
 def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
@@ -34,7 +35,8 @@ def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
     
     # Reads the password and gives me credentials
     try:
-        creds = Credentials.from_service_account_file(secrets["service_account_file"], scopes=scopes)
+        service_account_path = resource_path(secrets["service_account_file"])
+        creds = Credentials.from_service_account_file(filename=str(service_account_path), scopes=scopes)
         # Creates a client that I can use to interact with Sheets
         client = gspread.authorize(creds)
     except Exception as e:

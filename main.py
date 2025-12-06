@@ -151,7 +151,7 @@ def main():
             write_to_sheets(parsed_data, data_needed, config, secrets)
         except Exception as e:
             print(f"Error writing to sheets: {e}")
-    elif not (config.get("next_cancel", False) or config.get("renew", False) or config.get("state_spreadsheet", False) or config.get("new_venture", False)):
+    elif not config.get("mode"):
         print("config error: no mode enabled in config.json")
     else:
         print("no data parsed")

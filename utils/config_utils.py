@@ -37,5 +37,8 @@ def load_secrets(secrets_path = "config/secrets.json"):
     
 
 def save_config(updated_values):
-    # TODO: take the dictionary values and use them to update config.json
-    return
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    full_path = os.path.join(base_dir, "config/config.json")
+    with open(full_path, "w") as config_file:
+        json.dump(updated_values, config_file, indent=4)
+    

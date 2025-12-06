@@ -1,10 +1,9 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from tkcalendar import DateEntry # type: ignore
 from datetime import date
 from dateutil.relativedelta import relativedelta
-import threading # So the UI can run at the same time as the program without interference
-# from main import main
+from threading import Thread # So the UI can run at the same time as the program without interference
 from utils.config_utils import save_config
 
 # Switches between frames
@@ -99,9 +98,21 @@ def run_program(lastFrame):
             "end_date": cancelSheetEndDateEntry.get_date().isoformat() if option.get() == "cancel" else renewSheetEndDateEntry.get_date().isoformat() if option.get() == "renew" else None,
         }
         save_config(updated_values)
-        # TODO run main in a thread?
-
+        
+        from main import main as run_main
+        global scraper_thread
+        scraper_thread = Thread(target=run_main, daemon=True)
+        scraper_thread.start()
     return
+
+def on_close():
+    if scraper_thread and scraper_thread.is_alive():
+        if not messagebox.askyesno(
+            "Confirm exit", 
+            "Scrape is still running. Exit anyway?"
+            ):
+                return
+    root.destroy()
     
 # Enable the next button upon selecting an option
 def _on_option_change(*args):
@@ -190,6 +201,9 @@ def update_status(message):
     loadingMessage.config(text=message)
     root.update_idletasks()
 
+# need this
+scraper_thread = None
+
 # Create the root
 root = tk.Tk()
 root.title("SAFER Data Scraper")
@@ -274,6 +288,7 @@ backbtn = ttk.Button(content, text="Back", command=lambda: (switch_frame("back",
 nxtbtn = ttk.Button(content, text="Next", command=lambda: (switch_frame(option.get())), state=["disabled"])
 startbtn = ttk.Button(content, text="Start", command=lambda: (switch_frame("loading", option.get())), state=["disabled"])
 quitbtn = ttk.Button(content, text="Quit", command=root.destroy)
+root.protocol("WM_DELETE_WINDOW", on_close)
 errorMessage = tk.StringVar()
 errorMessageLabel = ttk.Label(content)
 errorMessageLabel["textvariable"] = errorMessage

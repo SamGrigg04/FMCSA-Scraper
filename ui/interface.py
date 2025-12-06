@@ -5,6 +5,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 import threading # So the UI can run at the same time as the program without interference
 # from main import main
+from utils.config_utils import save_config
 
 # Switches between frames
 def switch_frame(frame, lastFrame=None):
@@ -89,6 +90,15 @@ def run_program(lastFrame):
 
     if "disabled" not in startbtn.state():
         startbtn.state(["disabled"]) # So the user can't double run
+        updated_values = {
+            "mode": option.get(),
+            "spreadsheet_id": stateSheetID.get() or cancelSheetID.get() or renewSheetID.get() or newVentureSheetID.get(),
+            "sheet_name": stateSheetName.get() or cancelSheetName.get() or renewSheetName.get() or newVentureSheetName.get(),
+            "state": stateSheetState.get() if option.get() == "state" else None,
+            "start_date": cancelSheetStartDateEntry.get_date().isoformat() if option.get() == "cancel" else renewSheetStartDateEntry.get_date().isoformat() if option.get() == "renew" else None,
+            "end_date": cancelSheetEndDateEntry.get_date().isoformat() if option.get() == "cancel" else renewSheetEndDateEntry.get_date().isoformat() if option.get() == "renew" else None,
+        }
+        save_config(updated_values)
         # TODO run main in a thread?
 
     return

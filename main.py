@@ -24,7 +24,7 @@ def main():
     parsed_data = None
     data_needed = None
 
-    if config.get("state_spreadsheet", False):
+    if config.get("mode") == "state":
         params = {
             "phy_state": config["state"], 
             "carrier_operation": "A", # Interstate
@@ -52,7 +52,7 @@ def main():
             "name_company"
             ]
 
-    elif config.get("next_cancel", False):
+    elif config.get("mode") == "cancel":
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -78,7 +78,7 @@ def main():
             "name_company"
             ]
         
-    elif config.get("renew", False):
+    elif config.get("mode") == "renew":
         params = {
             "carrier_operation": "A",
             "status_code": "A"
@@ -113,7 +113,7 @@ def main():
             "business_duration"
             ]
 
-    elif config.get("new_venture", False):
+    elif config.get("mode") == "newVenture":
         params = {
             "$where": "(docket_number LIKE 'MC%') " # Starts with MC
                     "AND dot_number != '00000000' "

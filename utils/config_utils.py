@@ -35,7 +35,7 @@ def load_secrets(secrets_path = "config/secrets.json"):
     with open(full_path, "r") as file:
         return json.load(file)
     
-"""
-Need something to update the config file when values
-are submitted from the UI
-"""
+
+def save_config(updated_values):
+    # TODO: take the dictionary values and use them to update config.json
+    return

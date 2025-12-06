@@ -33,7 +33,7 @@ def try_parse_date(value):
 # Makes the phone number pretty
 def format_phone(number):
     number = str(number) # just in case it isn't already a string
-    number = re.sub(r"\D,", "", number) # removes everything that isn't a digit
+    number = re.sub(r"\D", "", number) # removes everything that isn't a digit
     # If the number has a US country code, remove it
     if len(number) == 11 and number.startswith("1"):
         number = number[1:]

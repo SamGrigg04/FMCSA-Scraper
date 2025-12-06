@@ -1,5 +1,6 @@
 from utils.network_utils import get_json
 from datetime import datetime, timedelta, date
+import re
 
 # Make date-like values into actual dates or die trying
 def try_parse_date(value):
@@ -31,6 +32,8 @@ def try_parse_date(value):
 
 # Makes the phone number pretty
 def format_phone(number):
+    number = str(number) # just in case it isn't already a string
+    number = re.sub(r"\D,", "", number) # removes everything that isn't a digit
     # If the number has a US country code, remove it
     if len(number) == 11 and number.startswith("1"):
         number = number[1:]
@@ -101,10 +104,16 @@ def format_cargo(row):
 def dataset_rows(url, params, headers):
     params = params.copy()
     params["$select"] = "count(*) as count"
-    return int(get_json(url, params, headers)[0]["count"])
+    try:
+        count = int(get_json(url, params, headers)[0]["count"])
+    except Exception as e:
+        print("Failed to get row count in dataset_rows")
+        return
+    return count
 
 # Combines two data sets based on dot number
-# list1 does not accept additional values from list2
+# LIST1 IS THE AUTHORITATIVE LIST AND IGNORES DOT NUMBERS 
+# THAT ONLY EXIST IN LIST2
 def combine_lists_dot(list1, list2):
     
     # This will be a reference list with all
@@ -209,10 +218,11 @@ def in_date_range(data, date_field, start_date=None, end_date=None):
         end_date = start_date + timedelta(days=30)
 
     # Sort the data (newest first)
+    #TODO Check to see that it is sorted correctly
     data = sorted(
         data,
         key=lambda x: try_parse_date(x.get(date_field)) or date(1900, 1, 1),
-        reverse=False
+        reverse=True
     )
 
     filtered = []
@@ -227,11 +237,16 @@ def in_date_range(data, date_field, start_date=None, end_date=None):
     return filtered
 
 def sort_dot(data):
-    return sorted(
+    try:
+        _sorted = sorted(
         data,
         key=lambda x: int(x.get("dot_number", "")),
         reverse=True
-    )
+        )
+    except Exception as e:
+        print("Failed to sort data (likely dot_number is missing or empty)")
+        return
+    return _sorted
 
 def pending_app(data):
     for row in data:

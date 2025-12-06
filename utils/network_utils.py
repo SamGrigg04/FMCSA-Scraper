@@ -12,7 +12,7 @@ def get_json(url, params=None, headers=None, timeout=30, retries=2):
                 response = session.get(url, params=params, headers=headers, timeout=timeout)
                 response.raise_for_status()
                 return response.json()
-            except RequestException:
+            except Exception:
                 if attempt >= retries: # If we run out of retries
                     raise # Raise an exception
                 attempt += 1

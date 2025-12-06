@@ -36,6 +36,9 @@ def run(params, headers, config, check_count = True):
         if not page:
             break
 
+        for row in page:
+            row["dot_number"] = row.get("dot_number", "").zfill(8)
+
         try:
             data.extend(page)
         except Exception as e:

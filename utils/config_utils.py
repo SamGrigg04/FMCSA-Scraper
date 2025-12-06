@@ -35,8 +35,7 @@ def load_secrets(secrets_path = "config/secrets.json"):
     with open(full_path, "r") as file:
         return json.load(file)
     
-def update_config():
-    return
-
-def save_config():
-    return
+"""
+Need something to update the config file when values
+are submitted from the UI
+"""

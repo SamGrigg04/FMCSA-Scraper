@@ -100,10 +100,10 @@ def format_cargo(row):
     row["cargo_carried"] = ", ".join(cargo_carried)
     return
 
-# Probably just use this one for loading bar purposes
+# I generally just use this one for loading bar purposes
 def dataset_rows(url, params, headers):
     params = params.copy()
-    params["$select"] = "count(*) as count"
+    params["$select"] = "count(*) as count" # Makes it so it just gives the number of rows the parameters will return
     try:
         count = int(get_json(url, params, headers)[0]["count"])
     except Exception as e:
@@ -218,11 +218,10 @@ def in_date_range(data, date_field, start_date=None, end_date=None):
         end_date = start_date + timedelta(days=30)
 
     # Sort the data (newest first)
-    #TODO Check to see that it is sorted correctly
     data = sorted(
         data,
         key=lambda x: try_parse_date(x.get(date_field)) or date(1900, 1, 1),
-        reverse=True
+        reverse=False
     )
 
     filtered = []
@@ -236,6 +235,7 @@ def in_date_range(data, date_field, start_date=None, end_date=None):
 
     return filtered
 
+# Sorts the data by DOT number (biggest first)
 def sort_dot(data):
     try:
         _sorted = sorted(
@@ -248,6 +248,7 @@ def sort_dot(data):
         return
     return _sorted
 
+# Adds a key to the dict with what kind(s) of application is pending
 def pending_app(data):
     for row in data:
         pending_list = []

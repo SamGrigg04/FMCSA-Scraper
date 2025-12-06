@@ -15,6 +15,7 @@ def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
         raise ValueError("config must contain 'spreadsheet_id' and 'sheet_name'")
     if not isinstance(secrets, dict) or "service_account_file" not in secrets or "app_token" not in secrets:
         raise ValueError("secrets must contain 'service_account_file' and 'app_token'")
+    
     # Build data frame from raw_data
     cooked_data = []
     for row in raw_data:
@@ -23,7 +24,6 @@ def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
             bite_of_data.append(row.get(key, ""))
         cooked_data.append(bite_of_data)
 
-
     # Reads the csv data and makes sure it is formatted nicely
     df = pd.DataFrame(cooked_data, columns=data_needed).fillna("")
     if df.empty:
@@ -31,6 +31,7 @@ def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
 
     # Gives Google full permission to edit spreadsheets
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    
     # Reads the password and gives me credentials
     try:
         creds = Credentials.from_service_account_file(secrets["service_account_file"], scopes=scopes)

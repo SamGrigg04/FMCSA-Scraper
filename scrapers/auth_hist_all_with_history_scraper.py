@@ -1,17 +1,18 @@
 """
-https://data.transportation.gov/Trucking-and-Motorcoaches/AuthHist-All-With-History/9mw4-x3tu/about_data
+Scrapes data from https://data.transportation.gov/Trucking-and-Motorcoaches/AuthHist-All-With-History/9mw4-x3tu/about_data
 """
 
-from utils.network_utils import get_json
-from utils.data_utils import dataset_rows, get_latest_date, find_how_long
+from utils.network_utils import get_json # Makes requests to the API
+from utils.data_utils import dataset_rows, get_latest_date, find_how_long # For formatting data
 
 def run(params, headers, progress_queue, check_count=True):
     url = "https://data.transportation.gov/resource/9mw4-x3tu.json"
 
     params = params.copy()
     headers = headers.copy()
-    data = []
+    data = [] # List of dicts that contains all the info scraped
 
+    # Gets the number of rows so the progress bar can be updated dynamically
     try:
         rows = dataset_rows(url, params, headers) if check_count else None
     except Exception as e:
@@ -32,6 +33,7 @@ def run(params, headers, progress_queue, check_count=True):
         if not page:
             break
 
+        # Normalizes DOT number
         for row in page:
             row["dot_number"] = row.get("dot_number", "").zfill(8)
 
@@ -52,7 +54,7 @@ def run(params, headers, progress_queue, check_count=True):
         return []
     
     progress_queue.put((None, "Parsing data..."))
-    data = get_latest_date(data, "orig_served_date")
-    data = find_how_long(data)
+    data = get_latest_date(data, "orig_served_date") # Formats the data to contain only the most recent date and the info that goes along with it
+    data = find_how_long(data) # Adds a key to each dict that shows how long a given company has been with their insurance
 
     return data

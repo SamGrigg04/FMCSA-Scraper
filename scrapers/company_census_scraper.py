@@ -1,17 +1,17 @@
 """
-https://data.transportation.gov/Trucking-and-Motorcoaches/Company-Census-File/az4n-8mr2/about_data
+Scrapes data from https://data.transportation.gov/Trucking-and-Motorcoaches/Company-Census-File/az4n-8mr2/about_data
 """
 
-from utils.network_utils import get_json
-from utils.data_utils import dataset_rows, format_phone, format_cargo
+from utils.network_utils import get_json # Makes requests to the API
+from utils.data_utils import dataset_rows, format_phone, format_cargo # For formatting data
 
 def run(params, headers, progress_queue, check_count=True):
-    # This is the API we're hitting
     url = "https://data.transportation.gov/resource/az4n-8mr2.json"
     params = params.copy()
     headers = headers.copy()
-    data = []
+    data = [] # List of dicts that contains all the info scraped
 
+    # Gets the number of rows so the progress bar can be updated dynamically
     try:
         rows = dataset_rows(url, params, headers) if check_count else None
     except Exception as e:
@@ -32,6 +32,7 @@ def run(params, headers, progress_queue, check_count=True):
         if not page:
             break
 
+        # Normalizes DOT number, phone number, and cargo list
         for row in page:
             row["dot_number"] = row.get("dot_number", "").zfill(8)
             format_cargo(row)

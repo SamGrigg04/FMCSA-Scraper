@@ -1,14 +1,15 @@
-from queue import Queue
+from queue import Queue # For the progress bar
 import tkinter as tk
 from tkinter import ttk, messagebox
-from tkcalendar import DateEntry # type: ignore
+from tkcalendar import DateEntry
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from threading import Thread # So the UI can run at the same time as the program without interference
-from utils.config_utils import save_config
+from threading import Thread # So the UI can run at the same time as the scrapers without interference
+from utils.config_utils import save_config # Updates the config with user inputs
 
 # Switches between frames
 def switch_frame(frame, lastFrame=None):
+    # If the user clicks back, it takes them to the previous frame
     if frame == "back":
         if isinstance(lastFrame, str):
             frameObject = globals().get(f"{lastFrame}Frame")
@@ -22,15 +23,19 @@ def switch_frame(frame, lastFrame=None):
         startbtn.grid_remove()
         initFrame.grid()
         return
+    
+    # If they didn't push back, they're going forward
     initFrame.grid_remove()
     nxtbtn.grid_remove()
+
     if frame == "state":
         stateFrame.grid()
         backbtn.grid(column=0, row=10, sticky=(tk.S, tk.E))
         startbtn.grid(column=1, row=10, sticky=(tk.S, tk.E))
         quitbtn.grid(column=2, row=10, sticky=(tk.S, tk.E))
-        _validate_state()
+        validate_state()
         return
+    
     if frame == "cancel":
         cancelFrame.grid()
         backbtn.grid(column=0, row=10, sticky=(tk.S, tk.E))
@@ -38,6 +43,7 @@ def switch_frame(frame, lastFrame=None):
         quitbtn.grid(column=2, row=10, sticky=(tk.S, tk.E))
         validate_cancel()
         return
+    
     if frame == "renew":
         renewFrame.grid()
         backbtn.grid(column=0, row=10, sticky=(tk.S, tk.E))
@@ -45,6 +51,7 @@ def switch_frame(frame, lastFrame=None):
         quitbtn.grid(column=2, row=10, sticky=(tk.S, tk.E))
         validate_renew()
         return
+    
     if frame == "newVenture":
         newVentureFrame.grid()
         backbtn.grid(column=0, row=10, sticky=(tk.S, tk.E))
@@ -52,6 +59,8 @@ def switch_frame(frame, lastFrame=None):
         quitbtn.grid(column=2, row=10, sticky=(tk.S, tk.E))
         validate_new_venture()
         return
+    
+    # When they push the start button
     if frame == "loading":
         if isinstance(lastFrame, str):
             frameObject = globals().get(f"{lastFrame}Frame")
@@ -69,6 +78,7 @@ def switch_frame(frame, lastFrame=None):
     else:
         raise ValueError("Something went wrong")
 
+# Writes to config and starts the scrapers after validating
 def run_program(lastFrame):
     # Validate one more time before running things
     valid_frames = {"state", "cancel", "renew", "newVenture"}
@@ -78,7 +88,7 @@ def run_program(lastFrame):
         return
 
     validators = {
-        "state": _validate_state,
+        "state": validate_state,
         "cancel": validate_cancel,
         "renew": validate_renew,
         "newVenture": validate_new_venture,
@@ -90,6 +100,8 @@ def run_program(lastFrame):
 
     if "disabled" not in startbtn.state():
         startbtn.state(["disabled"]) # So the user can't double run
+
+        # Writes to config
         updated_values = {
             "mode": option.get(),
             "spreadsheet_id": stateSheetID.get() or cancelSheetID.get() or renewSheetID.get() or newVentureSheetID.get(),
@@ -100,12 +112,14 @@ def run_program(lastFrame):
         }
         save_config(updated_values)
         
+        # Starts the scrapers in a thread
         from main import main as run_main
         global scraper_thread
         scraper_thread = Thread(target=run_main, args=(progress_queue,), daemon=True)
         scraper_thread.start()
     return
 
+# Make a popup when closing to prevent accidental abortion
 def on_close():
     if scraper_thread and scraper_thread.is_alive():
         if not messagebox.askyesno(
@@ -123,13 +137,15 @@ def _on_option_change(*args):
         nxtbtn.state(["disabled"])
     
 # Validates the state inputs
-def _validate_state(*args):
+def validate_state(*args):
     if option.get() == "state":
+        # State abbreviations should only be 2 characters
         if len(stateSheetState.get()) > 2:
             errorMessage.set("State must be two letters (e.g UT, VA)")
             errorMessageLabel.grid(column=0, row=9, sticky=(tk.W, tk.S))
             startbtn.state(["disabled"])
             return
+        # If all inputs look good, enable the start button
         elif len(stateSheetState.get()) == 2:
             errorMessageLabel.grid_remove()
             if len(stateSheetID.get()) > 0 and len(stateSheetName.get()) > 0:
@@ -142,15 +158,18 @@ def _validate_state(*args):
         progress_queue.put((None, "Error validating information"))
     return
 
+# Validates the next cancel inputs
 def validate_cancel(*args):
     if option.get() == "cancel":
         start_date = cancelSheetStartDateEntry.get_date()
         end_date = cancelSheetEndDateEntry.get_date()
+        # end date should be the same or after the start date
         if end_date < start_date:
             errorMessage.set("Start date must be before end date")
             errorMessageLabel.grid(column=0, row=9, sticky=(tk.W, tk.S))
             startbtn.state(["disabled"])
             return
+        # If everything looks good, enable the start button
         elif end_date >= start_date:
             errorMessageLabel.grid_remove()
             if len(cancelSheetID.get()) > 0 and len(cancelSheetName.get()) > 0:
@@ -163,15 +182,18 @@ def validate_cancel(*args):
         progress_queue.put((None, "Error validating information"))
     return
 
+# Validates renewal data
 def validate_renew(*args):
     if option.get() == "renew":
         start_date = renewSheetStartDateEntry.get_date()
         end_date = renewSheetEndDateEntry.get_date()
+        # end date should be the same or after the start date
         if end_date < start_date:
             errorMessage.set("Start date must be before end date")
             errorMessageLabel.grid(column=0, row=9, sticky=(tk.W, tk.S))
             startbtn.state(["disabled"])
             return
+        # If everything looks good, enable the start button
         elif end_date >= start_date:
             errorMessageLabel.grid_remove()
             if len(renewSheetID.get()) > 0 and len(renewSheetName.get()) > 0:
@@ -184,7 +206,9 @@ def validate_renew(*args):
         progress_queue.put((None, "Error validating information"))
     return
 
+# Validates new venture data
 def validate_new_venture(*args):
+    # If all the fields are filled, enable the start button
     if option.get() == "newVenture":
         errorMessageLabel.grid_remove()
         if len(newVentureSheetID.get()) > 0 and len(newVentureSheetName.get()) > 0:
@@ -195,11 +219,13 @@ def validate_new_venture(*args):
         progress_queue.put((None, "Error validating information"))
     return
 
+# Updates the progress bar at regular intervals
 def poll_queue():
     while not progress_queue.empty():
         progress, message = progress_queue.get()
         loadingProgress.set(progress)
         loadingMessage.config(text=message)
+        # When the program finishes, close it
         if  message == "All done!":
             root.after(5000, root.destroy)
     root.after(100, poll_queue)
@@ -303,9 +329,9 @@ errorMessageLabel["foreground"] = "red"
 # Add functionality to buttons/entries
 option.trace_add("write", _on_option_change)
 
-stateSheetID.trace_add("write", _validate_state)
-stateSheetName.trace_add("write", _validate_state)
-stateSheetState.trace_add("write", _validate_state)
+stateSheetID.trace_add("write", validate_state)
+stateSheetName.trace_add("write", validate_state)
+stateSheetState.trace_add("write", validate_state)
 
 cancelSheetID.trace_add("write", validate_cancel)
 cancelSheetName.trace_add("write", validate_cancel)
@@ -388,7 +414,7 @@ progressBar.grid(row=0)
 loadingMessage.grid(row=1)
 loadingFrame.grid_remove()
 
-
+# Start it up!
 poll_queue()
 root.mainloop()
 

@@ -83,22 +83,23 @@ def write_to_sheets(raw_data, data_needed, config, secrets, progress_queue):
         while retry_count < max_retries:
             try:
                 worksheet.update(range_name=range_name, values=chunk)
-                print(f"writing to sheets... (rows {start_row}-{end_row})")
+                progress_queue.put((end_row/required_rows, f"writing to sheets... (rows {start_row}-{end_row})"))
                 break
             except Exception as e:
                 retry_count += 1
                 if retry_count >= max_retries:
-                    raise Exception(f"Failed to update range {range_name} after {max_retries} retries: {e}")
+                    progress_queue.put((None, f"Failed to update range {range_name} after {max_retries} retries: {e}"))
+                    return
                 # Exponential backoff: 1s, 2s, 4s
                 wait_time = 2 ** (retry_count - 1)
-                print(f"Update failed: {e}. Retrying in {wait_time}s... (attempt {retry_count}/{max_retries})")
+                progress_queue.put((None, f"Update failed: {e}. Retrying in {wait_time}s... (attempt {retry_count}/{max_retries})"))
                 time.sleep(wait_time)
         
         # Rate-limiting: brief delay between chunks to avoid overwhelming the API
         if i + 1000 < len(values):
             time.sleep(0.5)
     
-    print("All done")
+    progress_queue.put((100, "All done!"))
 
 
 

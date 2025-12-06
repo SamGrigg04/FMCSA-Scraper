@@ -5,7 +5,7 @@ https://data.transportation.gov/Trucking-and-Motorcoaches/ActPendInsur-All-With-
 from utils.network_utils import get_json
 from utils.data_utils import dataset_rows, get_latest_date
 
-def run(params, headers, progress_queue, check_count = True):
+def run(params, headers, progress_queue, check_count=True):
     url = "https://data.transportation.gov/resource/qh9u-swkp.json"
 
     params = params.copy()
@@ -15,10 +15,8 @@ def run(params, headers, progress_queue, check_count = True):
     try:
         rows = dataset_rows(url, params, headers) if check_count else None
     except Exception as e:
-        print(f"Error fetching dataset row count for {url}: {e}")
+        progress_queue.put((None, f"Error fetching dataset row count for {url}: {e}"))
         return []
-    print(f'rows: {rows}')
-
 
     # If more than 50k rows, pagination is nescessary
     offset = 0
@@ -29,7 +27,7 @@ def run(params, headers, progress_queue, check_count = True):
         try:
             page = get_json(url, params, headers)
         except Exception as e:
-            print(f"Error fetching data from {url} at offset {offset}: {e}")
+            progress_queue.put((None, f"Error fetching data from {url} at offset {offset}: {e}"))
             return []
         if not page:
             break
@@ -40,20 +38,20 @@ def run(params, headers, progress_queue, check_count = True):
         try:
             data.extend(page)
         except Exception as e:
-            print(f"Warning: failed to extend data at offset {offset} for {url}: {e}")
+            progress_queue.put((None, f"Warning: failed to extend data at offset {offset} for {url}: {e}"))
             pass
         offset += len(page)
 
-        print(f'fetched {offset} rows')
+        progress_queue.put((100 * offset/rows, f'fetched {offset}/{rows} rows...'))
 
         if rows and offset >= rows:
             break
 
     if not data:
-        #TODO: Print a big error message or something
-        print("No data fit your parameters.")
+        progress_queue.put((None, "No data fit your parameters."))
         return []
     
+    progress_queue.put((None, "Parsing data..."))
     data = get_latest_date(data, "effective_date")
 
     return data

@@ -5,7 +5,7 @@ https://data.transportation.gov/Trucking-and-Motorcoaches/Company-Census-File/az
 from utils.network_utils import get_json
 from utils.data_utils import dataset_rows, format_phone, format_cargo
 
-def run(params, headers, progress_queue, check_count = True):
+def run(params, headers, progress_queue, check_count=True):
     # This is the API we're hitting
     url = "https://data.transportation.gov/resource/az4n-8mr2.json"
     params = params.copy()
@@ -15,19 +15,19 @@ def run(params, headers, progress_queue, check_count = True):
     try:
         rows = dataset_rows(url, params, headers) if check_count else None
     except Exception as e:
-        print(f"Error fetching dataset row count for {url}: {e}")
+        progress_queue.put((None, f"Error fetching dataset row count for {url}: {e}"))
         return []
-    print(f'rows: {rows}')
 
     # If more than 50k rows, pagination is nescessary
     offset = 0
     params["$limit"] = 50000
+
     while True:
         params["$offset"] = offset
         try:
             page = get_json(url, params, headers)
         except Exception as e:
-            print(f"Error fetching data from {url} at offset {offset}: {e}")
+            progress_queue.put((None, f"Error fetching data from {url} at offset {offset}: {e}"))
             return []
         if not page:
             break
@@ -40,19 +40,17 @@ def run(params, headers, progress_queue, check_count = True):
         try:
             data.extend(page)
         except Exception as e:
-            # For now if there is an error it just skips the page and moves on
-            print(f"Warning: failed to extend data at offset {offset} for {url}: {e}")
+            progress_queue.put((None, f"Warning: failed to extend data at offset {offset} for {url}: {e}"))
             pass
         offset += len(page)
 
-        print(f'fetched {offset} rows')
+        progress_queue.put((100 * offset/rows, f'fetched {offset}/{rows} rows...'))
 
         if rows and offset >= rows:
             break
 
     if not data:
-        print("No data fit your parameters.")
-        #TODO: Print a big error message or something
+        progress_queue.put((None, "No data fit your parameters."))
         return []
 
     return data

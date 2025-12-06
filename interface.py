@@ -94,7 +94,7 @@ def run_program(lastFrame):
             "mode": option.get(),
             "spreadsheet_id": stateSheetID.get() or cancelSheetID.get() or renewSheetID.get() or newVentureSheetID.get(),
             "sheet_name": stateSheetName.get() or cancelSheetName.get() or renewSheetName.get() or newVentureSheetName.get(),
-            "state": stateSheetState.get() if option.get() == "state" else None,
+            "state": stateSheetState.get().upper() if option.get() == "state" else None,
             "start_date": cancelSheetStartDateEntry.get_date().isoformat() if option.get() == "cancel" else renewSheetStartDateEntry.get_date().isoformat() if option.get() == "renew" else None,
             "end_date": cancelSheetEndDateEntry.get_date().isoformat() if option.get() == "cancel" else renewSheetEndDateEntry.get_date().isoformat() if option.get() == "renew" else None,
         }
@@ -110,7 +110,7 @@ def on_close():
     if scraper_thread and scraper_thread.is_alive():
         if not messagebox.askyesno(
             "Confirm exit", 
-            "Scrape is still running. Exit anyway?"
+            "Scraper is still running. Exit anyway?"
             ):
                 return
     root.destroy()
@@ -289,7 +289,7 @@ loadingMessage = tk.Label(loadingFrame, text="Starting...")
 backbtn = ttk.Button(content, text="Back", command=lambda: (switch_frame("back", option.get())))
 nxtbtn = ttk.Button(content, text="Next", command=lambda: (switch_frame(option.get())), state=["disabled"])
 startbtn = ttk.Button(content, text="Start", command=lambda: (switch_frame("loading", option.get())), state=["disabled"])
-quitbtn = ttk.Button(content, text="Quit", command=root.destroy)
+quitbtn = ttk.Button(content, text="Quit", command=on_close)
 root.protocol("WM_DELETE_WINDOW", on_close)
 errorMessage = tk.StringVar()
 errorMessageLabel = ttk.Label(content)
